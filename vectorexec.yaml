@@ -1,0 +1,34 @@
+# Filename: vector.yaml
+---
+# https://vector.dev/docs/reference/configuration/sources/exec
+sources:
+  exec:
+    command:
+      - ./poll_appdynamics.sh
+    decoding:
+      codec: bytes
+    mode: streaming
+    streaming:
+      respawn_on_exit: False
+    type: exec
+
+# https://vector.dev/docs/reference/configuration/transforms
+transforms:
+  remove_exec_fields:
+    inputs:
+      - exec
+    # https://vector.dev/docs/reference/vrl/
+    source: |-
+      del(.command)
+      del(.host)
+      del(.source_type)
+    type: remap
+
+# https://vector.dev/docs/reference/configuration/sinks/console
+sinks:
+  print:
+    encoding:
+      codec: json
+    inputs:
+      - remove_exec_fields
+    type: console
