@@ -1,0 +1,53 @@
+sources:
+  appdynamics_api_art:
+    type: http_client
+    endpoint: "https://<controller>/controller/rest/applications/<applicationName>/metric-data?metric-path=Overall%20Application%20Performance%7CAverage%20Response%20Time%20%28ms%29&time-range-type=BEFORE_NOW&duration-in-mins=60&output=JSON"
+    method: GET
+    headers:
+      Authorization: 
+        - "Basic <base64 encoded creds>"
+      Content-Type: 
+        - "application/json"
+    scrape_interval_secs: 60  # How often to poll the API
+
+  appdynamics_api_cpm:
+    type: http_client
+    endpoint: "https://<controller>/controller/rest/applications/<applicationName>/metric-data?metric-path=Overall%20Application%20Performance%7CCalls%20per%20Minute&time-range-type=BEFORE_NOW&duration-in-mins=60&output=JSON"
+    method: GET
+    headers:
+      Authorization: 
+        - "Basic <base64 encoded creds>"
+      Content-Type: 
+        - "application/json"
+    scrape_interval_secs: 60  # How often to poll the API
+
+  appdynamics_api_epm:
+    type: http_client
+    endpoint: "https://<controller>/controller/rest/applications/<applicationName>/metric-data?metric-path=Overall%20Application%20Performance%7CErrors%20per%20Minute&time-range-type=BEFORE_NOW&duration-in-mins=60&output=JSON"
+    method: GET
+    headers:
+      Authorization: 
+        - "Basic <base64 encoded creds>"
+      Content-Type: 
+        - "application/json"
+    scrape_interval_secs: 60  # How often to poll the API
+
+transforms:
+  remove_extra_fields:
+    inputs:
+      - appdynamics_api_art
+      - appdynamics_api_cpm
+      - appdynamics_api_epm
+    # https://vector.dev/docs/reference/vrl/
+    source: |-
+      del(.message[0].metricId)
+      del(.source_type)
+    type: remap
+
+sinks:
+  print:
+    encoding:
+      codec: json
+    inputs:
+      - remove_extra_fields
+    type: console
